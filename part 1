@@ -1,0 +1,78 @@
+import json
+import uuid
+import boto3
+from datetime import datetime
+
+# Inicializar cliente de DynamoDB
+dynamodb = boto3.resource('dynamodb')
+tabla = dynamodb.Table('Prestamos')
+
+
+def validar_datos(evento):
+    """
+    Valida que el objeto de entrada contenga los campos obligatorios.
+    Retorna un diccionario con éxito o un mensaje de error.
+    """
+    campos_obligatorios = ["usuario", "libro", "fecha_prestamo", "fecha_devolucion"]
+    
+    for campo in campos_obligatorios:
+        if campo not in evento or not evento[campo]:
+            return {"exito": False, "mensaje": f"El campo '{campo}' es obligatorio"}
+
+    return {"exito": True}
+
+
+def registrar_prestamo(datos):
+    """
+    Registra un préstamo en la tabla DynamoDB.
+    Retorna el ID del préstamo creado.
+    """
+    id_prestamo = str(uuid.uuid4())
+
+    item = {
+        "id_prestamo": id_prestamo,
+        "usuario": datos["usuario"],
+        "libro": datos["libro"],
+        "fecha_prestamo": datos["fecha_prestamo"],
+        "fecha_devolucion": datos["fecha_devolucion"],
+        "creado_en": datetime.utcnow().isoformat()
+    }
+
+    tabla.put_item(Item=item)
+
+    return id_prestamo
+
+
+def lambda_handler(event, context):
+    """
+    Función principal que maneja la solicitud HTTP desde API Gateway.
+    """
+    try:
+        # Si el evento viene desde API Gateway, extraer el body
+        if "body" in event:
+            evento = json.loads(event["body"])
+        else:
+            evento = event
+
+        # Validar datos de entrada
+        validacion = validar_datos(evento)
+        if not validacion["exito"]:
+            return {
+                "statusCode": 400,
+                "body": json.dumps({"mensaje": validacion["mensaje"]})
+            }
+
+        # Registrar el préstamo en DynamoDB
+        id_prestamo = registrar_prestamo(evento)
+
+        return {
+            "statusCode": 201,
+            "body": json.dumps({"mensaje": "Préstamo registrado con éxito", "id_prestamo": id_prestamo})
+        }
+
+    except Exception as e:
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"mensaje": "Error al procesar la solicitud", "error": str(e)})
+        }
+
