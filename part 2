@@ -1,0 +1,20 @@
+import requests
+
+url = "https://tu-api-gateway.amazonaws.com/prod/prestamos"
+datos = {
+    "usuario": "maria.gomez",
+    "libro": "Redes en AWS",
+    "fecha_prestamo": "2025-03-12",
+    "fecha_devolucion": "2025-03-19"
+}
+
+respuesta = requests.post(url, json=datos)
+print(respuesta.json())
+
+    {
+    "body": "{ \"usuario\": \"maria.gomez\", \"libro\": \"Redes en AWS\", \"fecha_prestamo\": \"2025-03-12\", \"fecha_devolucion\": \"2025-03-19\" }"
+}
+ {
+    "statusCode": 201,
+    "body": "{\"mensaje\": \"Préstamo registrado con éxito\", \"id_prestamo\": \"123e4567-e89b-12d3-a456-426614174000\"}"
+}
