@@ -1,0 +1,5 @@
+validar_datos(evento): Verifica que todos los campos requeridos estén presentes.
+
+registrar_prestamo(datos): Genera un ID único y almacena los datos en DynamoDB.
+
+lambda_handler(event, context): Maneja la solicitud HTTP desde API Gateway, ejecuta la validación y almacena el préstamo.
